@@ -1,0 +1,7 @@
+/* Zera o layout do template e deixa o App ocupar a tela toda */
+#root {
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+}
