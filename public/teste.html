@@ -268,6 +268,150 @@
 <svg viewBox="0 0 930 358" id="svg12160520360"><path d="M 459 0 C 712.499 0 918 34.474 918 77 C 918 119.526 712.499 154 459 154 C 205.501 154 0 119.526 0 77 C 0 34.474 205.501 0 459 0 Z" transform="translate(6.309 102.112) rotate(-13 459 77)" fill="var(--token-5987ca59-a0c2-4562-861a-b7e9d2d04a6e, rgb(129, 74, 200))"/></svg>
 </div>
     
+    <!-- Script para rastrear cliques em botões de contato -->
+    <script>
+        // Função para rastrear evento de contato no Facebook Pixel
+        function trackContactEvent() {
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'Contact');
+                console.log('Facebook Pixel: Contact event tracked');
+            } else {
+                console.log('Facebook Pixel não carregado');
+            }
+        }
+        
+        // Função para adicionar rastreamento aos botões
+        function addTrackingToButtons() {
+            // Lista de seletores para elementos que podem ser botões de contato
+            const contactSelectors = [
+                'a[href*="whatsapp"]',
+                'a[href*="mailto"]',
+                'a[href*="tel:"]',
+                'a[href*="contact"]',
+                'a[href*="contato"]',
+                'button',
+                'a',
+                '[role="button"]',
+                '[data-contact]',
+                '[data-contato]',
+                '.contact-button',
+                '.contato-button',
+                '.whatsapp-button',
+                '.email-button',
+                '.phone-button'
+            ];
+            
+            let buttonsFound = 0;
+            
+            // Adiciona rastreamento direto aos elementos encontrados
+            contactSelectors.forEach(selector => {
+                try {
+                    const elements = document.querySelectorAll(selector);
+                    elements.forEach(element => {
+                        const text = element.textContent?.toLowerCase() || '';
+                        const href = element.href?.toLowerCase() || '';
+                        
+                        // Verifica se é um elemento de contato
+                        const isContactElement = 
+                            text.includes('contato') || 
+                            text.includes('contact') || 
+                            text.includes('whatsapp') || 
+                            text.includes('telefone') || 
+                            text.includes('email') ||
+                            text.includes('fale conosco') ||
+                            text.includes('agendar') ||
+                            text.includes('falar') ||
+                            href.includes('whatsapp') ||
+                            href.includes('mailto') ||
+                            href.includes('tel:') ||
+                            href.includes('contact') ||
+                            href.includes('contato');
+                        
+                        if (isContactElement && !element.dataset.trackingAdded) {
+                            // Marca como já processado
+                            element.dataset.trackingAdded = 'true';
+                            
+                            // Adiciona onclick diretamente no elemento
+                            const originalOnclick = element.onclick;
+                            element.onclick = function(e) {
+                                trackContactEvent();
+                                if (originalOnclick) {
+                                    originalOnclick.call(this, e);
+                                }
+                            };
+                            
+                            // Também adiciona event listener como backup
+                            element.addEventListener('click', function(e) {
+                                setTimeout(trackContactEvent, 50);
+                            }, true);
+                            
+                            buttonsFound++;
+                            console.log('Rastreamento adicionado a:', element);
+                        }
+                    });
+                } catch (e) {
+                    console.error('Erro ao processar seletor:', selector, e);
+                }
+            });
+            
+            console.log('Total de botões de contato encontrados:', buttonsFound);
+        }
+        
+        // Executa quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            addTrackingToButtons();
+            
+            // Re-executa após 2 segundos para capturar elementos carregados dinamicamente
+            setTimeout(addTrackingToButtons, 2000);
+            setTimeout(addTrackingToButtons, 5000);
+        });
+        
+        // Observa mudanças no DOM para elementos adicionados dinamicamente
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes.length > 0) {
+                    setTimeout(addTrackingToButtons, 500);
+                }
+            });
+        });
+        
+        // Inicia o observer quando o documento estiver pronto
+        if (document.body) {
+            observer.observe(document.body, { childList: true, subtree: true });
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                observer.observe(document.body, { childList: true, subtree: true });
+            });
+        }
+        
+        // Listener global como backup
+        document.addEventListener('click', function(e) {
+            let target = e.target;
+            
+            // Verifica o elemento clicado e seus pais (até 5 níveis)
+            for (let i = 0; i < 5 && target; i++) {
+                const text = target.textContent?.toLowerCase() || '';
+                const href = target.href?.toLowerCase() || '';
+                
+                if (text.includes('contato') || 
+                    text.includes('contact') || 
+                    text.includes('whatsapp') || 
+                    text.includes('telefone') || 
+                    text.includes('email') ||
+                    text.includes('fale conosco') ||
+                    text.includes('agendar') ||
+                    href.includes('whatsapp') ||
+                    href.includes('mailto') ||
+                    href.includes('tel:')) {
+                    trackContactEvent();
+                    break;
+                }
+                
+                target = target.parentElement;
+            }
+        }, true);
+    </script>
+    
     
     
 </body>
